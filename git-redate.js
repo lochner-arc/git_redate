@@ -1,6 +1,29 @@
 // require the library, main export is a function
 const simpleGit = require('simple-git');
-// simpleGit().clean(simpleGit.CleanOptions.FORCE);
+const { promisify } = require('util');
+const exec = promisify(require('child_process').exec)
+// node git-redate.js ../customer-data 57caf2404dd913172114e1f823a9ee6bea7b58d3
+
+const getGitUser = async function getGitUser () {
+    // Exec output contains both stderr and stdout outputs
+    const nameOutput = await exec('git config --global user.name')
+    const emailOutput = await exec('git config --global user.email')
+
+    return {
+        name: nameOutput.stdout.trim(),
+        email: emailOutput.stdout.trim()
+    }
+};
+
+const cherryPick = async function cherryPick (hash) {
+    // Exec output contains both stderr and stdout outputs
+    return await exec(`git cherry-pick ${hash}`)
+};
+
+const resetDate = async function resetDate () {
+    // Exec output contains both stderr and stdout outputs
+    return await exec(`git commit --amend --reset-author --no-edit`);
+};
 
 console.log('Hello world');
 const projectDir = process.argv[2];
@@ -22,7 +45,7 @@ const logOptions = {
     '--first-parent': null,
 };
 
-const logCb = (s, logData) => {
+const logCb = async (s, logData) => {
     // console.log('s', s);
 
     // console.log('logData', logData.all[0]);
@@ -46,7 +69,7 @@ const logCb = (s, logData) => {
 
         if (commit.hash === startHash) {
             // Get parent commit of this one. Then branch off parent.
-            parentHash = logData.all[i+1].hash;
+            parentHash = logData.all[i + 1].hash;
             break;
         }
     }
@@ -57,7 +80,13 @@ const logCb = (s, logData) => {
     console.log('newBranchName:', newBranchName);
     // newBranchName
 
-    // git.checkout(['-b', 'NEWTEST', parentHash])
+    git.checkout(['-b', newBranchName, parentHash]);
+
+    // git.command
+    // console.log(await getGitUser());
+
+    console.log(await cherryPick('57caf2404dd913172114e1f823a9ee6bea7b58d3'));
+    console.log(await resetDate());
 }
 
 
