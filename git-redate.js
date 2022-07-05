@@ -94,12 +94,21 @@ const logCb = async (s, logData) => {
     const reversedHashes = hashes.reverse()
 
     for (let i = 0; i < reversedHashes.length; i++) {
-        const cherryPickRes = await cherryPick(reversedHashes[i]);
-        console.log('cherryPickRes', cherryPickRes);
+        try {
+            const cherryPickRes = await cherryPick(reversedHashes[i]);
+            console.log('cherryPickRes', cherryPickRes);
+        } catch (e) {
+            console.log('EX CAUGHT: ', e);
 
-        if ((typeof cherryPickRes.stdout === 'string' || cherryPickRes.stdout instanceof String) && cherryPickRes.stdout.includes('The previous cherry-pick is now empty, possibly due to conflict resolution.')) {
-            await execCommand('git cherry-pick --skip');
+            if (e.toString().includes('The previous cherry-pick is now empty, possibly due to conflict resolution.')) {
+                console.log('Executing', 'git cherry-pick --skip');
+                await execCommand('git cherry-pick --skip');
+            }
         }
+
+        // if ((typeof cherryPickRes.stdout === 'string' || cherryPickRes.stdout instanceof String) && cherryPickRes.stdout.includes('The previous cherry-pick is now empty, possibly due to conflict resolution.')) {
+        //     await execCommand('git cherry-pick --skip');
+        // }
 
         console.log(await resetDate());
     }
