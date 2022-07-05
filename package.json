@@ -1,0 +1,9 @@
+{
+  "name": "git-redate",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "simple-git": "^3.10.0"
+  }
+}
