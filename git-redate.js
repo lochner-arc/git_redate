@@ -1,29 +1,8 @@
 // require the library, main export is a function
 const simpleGit = require('simple-git');
 const { promisify } = require('util');
-const exec = promisify(require('child_process').exec)
+// const exec = promisify(require('child_process').exec)
 // node git-redate.js ../customer-data 57caf2404dd913172114e1f823a9ee6bea7b58d3
-
-const getGitUser = async function getGitUser () {
-    // Exec output contains both stderr and stdout outputs
-    const nameOutput = await exec('git config --global user.name')
-    const emailOutput = await exec('git config --global user.email')
-
-    return {
-        name: nameOutput.stdout.trim(),
-        email: emailOutput.stdout.trim()
-    }
-};
-
-const cherryPick = async function cherryPick (hash) {
-    // Exec output contains both stderr and stdout outputs
-    return await exec(`git cherry-pick ${hash}`)
-};
-
-const resetDate = async function resetDate () {
-    // Exec output contains both stderr and stdout outputs
-    return await exec(`git commit --amend --reset-author --no-edit`);
-};
 
 console.log('Hello world');
 const projectDir = process.argv[2];
@@ -36,6 +15,32 @@ console.log('projectDir', projectDir);
 const git = simpleGit(); // simpleGit('../customer-data');
 
 console.log(git.cwd(projectDir));
+
+// const getGitUser = async function getGitUser () {
+//     // Exec output contains both stderr and stdout outputs
+//     const nameOutput = await exec('git config --global user.name')
+//     const emailOutput = await exec('git config --global user.email')
+//
+//     return {
+//         name: nameOutput.stdout.trim(),
+//         email: emailOutput.stdout.trim()
+//     }
+// };
+
+const cherryPick = async function cherryPick (hash) {
+    // Exec output contains both stderr and stdout outputs
+
+
+    const exec = promisify(require('child_process').exec(`git cherry-pick ${hash}`, {cwd: projectDir}))
+
+    return await exec
+};
+
+const resetDate = async function resetDate () {
+    // Exec output contains both stderr and stdout outputs
+    return await exec(`git commit --amend --reset-author --no-edit`, {cwd: projectDir});
+};
+
 
 // const logOptions = {
 //     file: projectDir,
