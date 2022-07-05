@@ -1,8 +1,29 @@
 // require the library, main export is a function
 const simpleGit = require('simple-git');
 const { promisify } = require('util');
-// const exec = promisify(require('child_process').exec)
+const exec = promisify(require('child_process').exec)
 // node git-redate.js ../customer-data 57caf2404dd913172114e1f823a9ee6bea7b58d3
+
+const getGitUser = async function getGitUser () {
+    // Exec output contains both stderr and stdout outputs
+    const nameOutput = await exec('git config --global user.name')
+    const emailOutput = await exec('git config --global user.email')
+
+    return {
+        name: nameOutput.stdout.trim(),
+        email: emailOutput.stdout.trim()
+    }
+};
+
+const cherryPick = async function cherryPick (hash) {
+    // Exec output contains both stderr and stdout outputs
+    return await exec(`git cherry-pick ${hash}`)
+};
+
+const resetDate = async function resetDate () {
+    // Exec output contains both stderr and stdout outputs
+    return await exec(`git commit --amend --reset-author --no-edit`);
+};
 
 console.log('Hello world');
 const projectDir = process.argv[2];
@@ -14,33 +35,8 @@ console.log('projectDir', projectDir);
 
 const git = simpleGit(); // simpleGit('../customer-data');
 
+process.chdir(projectDir);
 console.log(git.cwd(projectDir));
-
-// const getGitUser = async function getGitUser () {
-//     // Exec output contains both stderr and stdout outputs
-//     const nameOutput = await exec('git config --global user.name')
-//     const emailOutput = await exec('git config --global user.email')
-//
-//     return {
-//         name: nameOutput.stdout.trim(),
-//         email: emailOutput.stdout.trim()
-//     }
-// };
-
-const cherryPick = async function cherryPick (hash) {
-    // Exec output contains both stderr and stdout outputs
-
-
-    const exec = promisify(require('child_process').exec(`git cherry-pick ${hash}`, {cwd: projectDir}))
-
-    return await exec
-};
-
-const resetDate = async function resetDate () {
-    // Exec output contains both stderr and stdout outputs
-    return await exec(`git commit --amend --reset-author --no-edit`, {cwd: projectDir});
-};
-
 
 // const logOptions = {
 //     file: projectDir,
@@ -64,7 +60,7 @@ const logCb = async (s, logData) => {
     // const allLogs = logData.all;
 
     let branchName = logData.all[0].refs.split(' ')[2];// refs: 'HEAD -> POL-1838-Salesforce-API',
-    let newBranchName = `${branchName}-PR`;
+    let newBranchName = `PR/${branchName}`;
 
     for (let i = 0; i < logData.all.length; i++) {
         // console.log('i');
@@ -85,13 +81,21 @@ const logCb = async (s, logData) => {
     console.log('newBranchName:', newBranchName);
     // newBranchName
 
-    git.checkout(['-b', newBranchName, parentHash]);
+    await git.checkout(['-b', newBranchName, parentHash]);
 
     // git.command
     // console.log(await getGitUser());
 
-    console.log(await cherryPick('57caf2404dd913172114e1f823a9ee6bea7b58d3'));
-    console.log(await resetDate());
+    const reversedHashes = hashes.reverse()
+
+    for (let i = 0; i < reversedHashes.length; i++) {
+
+        /*
+        The previous cherry-pick is now empty, possibly due to conflict resolution.
+         */
+        console.log(await cherryPick(reversedHashes[i]));
+        console.log(await resetDate());
+    }
 }
 
 
