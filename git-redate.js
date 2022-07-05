@@ -15,9 +15,14 @@ const getGitUser = async function getGitUser () {
     }
 };
 
+const execCommand = async function cherryPick (cmd) {
+    // Exec output contains both stderr and stdout outputs
+    return await exec(cmd);
+};
+
 const cherryPick = async function cherryPick (hash) {
     // Exec output contains both stderr and stdout outputs
-    return await exec(`git cherry-pick ${hash}`)
+    return await exec(`git cherry-pick ${hash} -m 1`)
 };
 
 const resetDate = async function resetDate () {
@@ -89,11 +94,13 @@ const logCb = async (s, logData) => {
     const reversedHashes = hashes.reverse()
 
     for (let i = 0; i < reversedHashes.length; i++) {
+        const cherryPickRes = await cherryPick(reversedHashes[i]);
+        console.log('cherryPickRes', cherryPickRes);
 
-        /*
-        The previous cherry-pick is now empty, possibly due to conflict resolution.
-         */
-        console.log(await cherryPick(reversedHashes[i]));
+        if ((typeof cherryPickRes.stdout === 'string' || cherryPickRes.stdout instanceof String) && cherryPickRes.stdout.includes('The previous cherry-pick is now empty, possibly due to conflict resolution.')) {
+            await execCommand('git cherry-pick --skip');
+        }
+
         console.log(await resetDate());
     }
 }
