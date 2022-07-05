@@ -1,5 +1,3 @@
-
-
 // require the library, main export is a function
 const simpleGit = require('simple-git');
 // simpleGit().clean(simpleGit.CleanOptions.FORCE);
@@ -33,23 +31,33 @@ const logCb = (s, logData) => {
     // logData['latest']
 
     const hashes = [];
+    let parentHash = null;
 
-    let atStart = false;
+    // const allLogs = logData.all;
+
+    let branchName = logData.all[0].refs.split(' ')[2];// refs: 'HEAD -> POL-1838-Salesforce-API',
+    let newBranchName = `${branchName}-PR`;
 
     for (let i = 0; i < logData.all.length; i++) {
         // console.log('i');
         const commit = logData.all[i];
         console.log(commit);
         hashes.push(commit.hash);
+
         if (commit.hash === startHash) {
-            atStart = true;
-        } else if (atStart) {
             // Get parent commit of this one. Then branch off parent.
+            parentHash = logData.all[i+1].hash;
             break;
         }
     }
 
     console.log(hashes);
+    console.log('parent:', parentHash);
+    console.log('branchName:', branchName);
+    console.log('newBranchName:', newBranchName);
+    // newBranchName
+
+    // git.checkout(['-b', 'NEWTEST', parentHash])
 }
 
 
